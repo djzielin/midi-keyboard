@@ -3,12 +3,11 @@ CXXFLAGS+= -O3  -I/usr/include/alsa
 #RASPBERRY=yes
 
 ifdef RASPBERRY
-  LDFLAGS  +=-lwiringPi
+  LDFLAGS+=-lwiringPi
   CXXFLAGS +=-DRASPBERRY -I/usr/include/stk
-  LDFLAGS  += -lstk
+  LDFLAGS += -lstk
 else
-  LDFLAGS  +=-L$(wildcard ~/stk-4.4.3/src) -lstk
-  CXXFLAGS += -I$(wildcard ~/stk-4.4.3/include)
+  LDFLAGS +=-L$(wildcard ~/stk-4.4.3/src) -lstk -I$(wildcard ~/stk-4.4.3/include)
 
 endif
 

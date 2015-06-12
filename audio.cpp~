@@ -81,8 +81,7 @@ void setup_audio_jack(int port)
 
 void audio_loop_jack()
 {
-   while(1)
-      sleep(1);
+   sleep(1);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
