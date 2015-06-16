@@ -31,8 +31,11 @@ void send_audio_to_card_jack(float *data, int nframes)
    memcpy(out,data,nframes*sizeof(float)); //TODO: this will be slightly more complicated for stereo signals
 }
 
-void setup_audio_jack(int port)
+void setup_audio_jack(int aport)
 {
+   printf("setting up for port: %d\n",aport);
+   //exit(1);
+
    if ((jack_client = jack_client_open("dave_keyboard", JackNullOption, NULL)) == 0)
    {
       fprintf(stderr, "jack server not running?\n");
@@ -66,7 +69,7 @@ void setup_audio_jack(int port)
       exit (1);
    }
 
-   if (jack_connect (jack_client, jack_port_name (output_port), ports[port])) 
+   if (jack_connect (jack_client, jack_port_name (output_port), ports[aport])) 
    {
       fprintf (stderr, "cannot connect playback ports\n");
       exit(1);

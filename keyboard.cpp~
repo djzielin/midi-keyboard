@@ -370,7 +370,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
 
          if (command == 0x90 && midi_event[2]!=0) //midi note on received
          { 
-            int note = midi_event[1];
+            int note = midi_event[1]-12;
             int vol = midi_event[2]; 
             //vol=0;  
             float vol_f=vol/127.0;
@@ -426,7 +426,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
          if (command == 0x80 || (command==0x90 && midi_event[2]==0)) //midi note off received
          {
           
-            int note = midi_event[1];
+            int note = midi_event[1]-12;
             int note_index=note;
              
   //          printf("keyboard.cpp -- got note off: %d at %d\n",note,sample_count);
@@ -495,8 +495,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
          {
             //printf("OMG pitch bend\n");
             int v=(int)midi_event[1];
-            int v2=(int)midi_event[2];
-            printf("pitch: %d %d\n",v,v2);
+            //printf("pitch: %d %d\n",v,v2);
             //int b1 = in_event.buffer[1];
             //int b2 = in_event.buffer[2]; 
             //bend_amount=(float)((b2<<7)+b1)/16384.0*2.0;

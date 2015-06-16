@@ -370,7 +370,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
 
          if (command == 0x90 && midi_event[2]!=0) //midi note on received
          { 
-            int note = midi_event[1];
+            int note = midi_event[1]-12;
             int vol = midi_event[2]; 
             //vol=0;  
             float vol_f=vol/127.0;
@@ -426,7 +426,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
          if (command == 0x80 || (command==0x90 && midi_event[2]==0)) //midi note off received
          {
           
-            int note = midi_event[1];
+            int note = midi_event[1]-12;
             int note_index=note;
              
   //          printf("keyboard.cpp -- got note off: %d at %d\n",note,sample_count);
@@ -1064,7 +1064,7 @@ int main(int argc, char **argv)
    signal(SIGHUP, signal_handler);
    signal(SIGINT, signal_handler);
 
-      
+   printf("argc: %d\n",argc);
 
    if(argc>3)  setup_audio(atoi(argv[3]));   
    else        setup_audio(0);   
