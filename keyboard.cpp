@@ -1044,11 +1044,13 @@ int main(int argc, char **argv)
    //   exit(1);
   // }
 
-   //map_midi_functions_for_alsa();
-   //map_audio_functions_for_alsa();
-
+#ifdef USE_ALSA
+   map_midi_functions_for_alsa();
+   map_audio_functions_for_alsa();
+#else
    map_midi_functions_for_jack();
    map_audio_functions_for_jack();
+#endif
 
    string kit_name="rhodes";
    if(argc>1) 
