@@ -99,8 +99,9 @@ int obtain_midi_events_jack(int nframes)
    return total_midi_events;
 }
 
-void setup_midi_jack(string midi_device_name, string second_choice) //TODO - what about when we need to get data from multiple devices at the same time?
+int setup_midi_jack(string midi_device_name, string second_choice) //TODO - what about when we need to get data from multiple devices at the same time?
 {
+   int ret_val=0;
    printf("trying to setup jack midi\n");
 
    input_port = jack_port_register (jack_client, "midi_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
@@ -119,19 +120,31 @@ void setup_midi_jack(string midi_device_name, string second_choice) //TODO - wha
       printf("  ports: %s\n",ports[i]);
       
       string s1=ports[i];
-      if ((s1.find(midi_device_name)!=string::npos) || (s1.find(second_choice)!=string::npos))
+      bool is_first=(s1.find(midi_device_name)!=string::npos);
+      bool is_second=(s1.find(second_choice)!=string::npos);
+ 
+      if (is_first || is_second)
       {    
+          
+
         std::cout << "  found our desired device: " << midi_device_name << std::endl;
                
           jack_connect (jack_client, ports[i], jack_port_name (input_port));
           midi_setup=true;
-  
+          if(is_first)
+               ret_val=0;
+          if(is_second)
+               ret_val=1;
+
+          break;
+          
       }
    }
    if(midi_setup==false)
      exit(1);
 
    printf("   Done setting up jack midi\n");
+   return ret_val;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -436,6 +449,8 @@ void get_alsa_system_info()
 }
 
 
+int instrument;
+
 int find_specific_alsa_client(string client_name, string client_name2)
 {
    printf("trying to find a ALSA MIDI client: %s\n",client_name.c_str());
@@ -459,9 +474,16 @@ int find_specific_alsa_client(string client_name, string client_name2)
 
       printf("  found: %s\n",name.c_str());
 
-      if((name.find(client_name)!=string::npos) || (name.find(client_name2)!=string::npos))
+      if((name.find(client_name)!=string::npos))
       {
          printf("    MATCH!\n");
+         instrument=0;
+         return idx;
+      }
+      if((name.find(client_name2)!=string::npos))
+      {
+         printf("    MATCH!\n");
+         instrument=1;
          return idx;
       }
 
@@ -538,7 +560,7 @@ void connect_alsa_ports()
 	}
 }
 
-void setup_midi_alsa(string midi_device_name, string second_choice)
+int setup_midi_alsa(string midi_device_name, string second_choice)
 {
    int err;
 
@@ -574,7 +596,11 @@ void setup_midi_alsa(string midi_device_name, string second_choice)
    printf("   DONE\n");
 
    midi_setup=true;
+
+   return instrument;
 }
+ 
+
 
 
 

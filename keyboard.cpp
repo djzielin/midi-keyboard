@@ -38,7 +38,7 @@ using namespace std;
 
 //#define DO_PROFILE
 
-
+bool is_guitar=false;
 
 key_prototype **skv;
 key_prototype *active_samples[128];
@@ -50,13 +50,16 @@ stk::BiQuad op2;
 bool high_pass_filter=false;
 
 #ifdef RASPBERRY
-#define LIGHT_PIN 26
-//#define SWITCH_PIN 12
+
+//for the B+
+//#define LIGHT_PIN 26
+
+//for the 2
+#define LIGHT_PIN 13
+
 void setup_gpio()
 {
    pinMode(LIGHT_PIN,OUTPUT);
-   //pinMode(SWITCH_PIN,INPUT);
-   //pullUpDnControl(SWITCH_PIN,PUD_UP);
 }
 #endif
 
@@ -90,7 +93,7 @@ float bend_amount=1.0;
 float inc_amount=1.0;
 
 int (*obtain_midi_events)(int);
-void (*setup_midi)(std::string, std::string);
+int (*setup_midi)(std::string, std::string);
 
 void (*setup_audio)(int port);
 void (*audio_shutdown)();
@@ -303,6 +306,7 @@ int prev_sw=0;
 int prev_pitch_wheel=0;
 
 bool first_generate_samples=true;
+int old_guitar_val=0;
 
 int generate_samples(jack_nframes_t nframes, void *arg)
 {
@@ -375,6 +379,14 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             //vol=0;  
             float vol_f=vol/127.0;
             float vol_sq=vol_f*vol_f;
+
+            if(is_guitar)
+            {
+//               for(int e=0;e<127;e++)
+  //               skv[e]->key_off();
+
+
+            }
 
        //#ifdef DEBUG
        //     printf("keyboard.cpp -- got note on: %d %.02f %.02f time: %d\n",note,vol_f,vol_sq,sample_count);
@@ -450,9 +462,24 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             float val_rsq=1.0-((1.0-val_f)*(1.0-val_f));
            
           //#ifdef DEBUG
-              //printf("cc: %d val: %d\n",cc,val);
+//              printf("cc: %d val: %d\n",cc,val);
           //#endif
-            
+            if(cc==1 && is_guitar) 
+            {  //printf("is guitar controller\n");
+
+               
+               if(val>50 && old_guitar_val==0)
+               { 
+                  old_guitar_val=1;
+                  printf("incrementing patch!\n");
+                 current_instrument=(current_instrument+1)%all_instruments.size();
+   
+                   all_instruments[current_instrument]->set_active();
+               }
+               if(val<50)
+                  old_guitar_val=0;
+
+            }
             if(cc==7) { keyboard_slider_volume=val_f; }
            // if(cc==22) { op.setPole(val_rsq); }
             //if(cc==13) { lp_vol=val_f; }
@@ -528,8 +555,9 @@ int generate_samples(jack_nframes_t nframes, void *arg)
                }
             }
             
-            if(abs(pitch_wheel)==1 && prev_pitch_wheel==0)
+            if(abs(pitch_wheel)==1 && prev_pitch_wheel==0 && is_guitar==false)
             {
+               printf("switching patches now\n");
                current_instrument+=pitch_wheel;
                if(current_instrument<0) current_instrument=4;
                if(current_instrument>4) current_instrument=0;
@@ -1071,9 +1099,21 @@ int main(int argc, char **argv)
    if(argc>3)  setup_audio(atoi(argv[3]));   
    else        setup_audio(0);   
 
-   if(argc>2)  setup_midi(argv[2],argv[2]);
-   else        setup_midi("Keystation","You Rock Guitar"); //TODO: maybe take this as command line parameter?
+   int instrument=0;
+   if(argc>2)
+      instrument=setup_midi(argv[2],argv[2]);
+   else      
+      instrument=setup_midi("Keystation","You Rock Guitar"); //TODO: maybe take this as command line parameter?
 
+   if(instrument==1)
+   {
+      is_guitar=true;
+      printf("we are using guitar!\n");
+
+   current_instrument=4;
+   all_instruments[current_instrument]->set_active();
+
+   }
   // while(1) //if we want to do any keyboard interaction, do it here
   // {
       audio_loop();

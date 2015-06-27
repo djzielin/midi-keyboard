@@ -5,7 +5,7 @@
 case "$1" in
   start)
     echo "Starting script blah "
-    /home/pi/start_button.sh &
+    /home/pi/midi-keyboard/pi_gpio.py &
     ;;
   stop)
     echo "Stopping script blah"
