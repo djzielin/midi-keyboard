@@ -71,8 +71,7 @@ void key_additive::key_on(float volume)
    for(int i=0;i<waves.size();i++)
    {
       waves[i]->reset(); 
-      //waves[i]->set_phase((float)rand()/(float)RAND_MAX); //randomize phase to prevent weird effects. 
-      //no reset so waves will be free-running
+//      waves[i]->set_phase((float)rand()/(float)RAND_MAX); //randomize phase to prevent weird effects. 
    }
    is_playing=true;
    

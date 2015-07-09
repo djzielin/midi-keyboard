@@ -308,6 +308,18 @@ int prev_pitch_wheel=0;
 bool first_generate_samples=true;
 int old_guitar_val=0;
 
+float compute_volume_factor(int note, int note_low, int note_hi, float val_low, float val_high)
+{
+   float x=note-note_low; //get 0--->?
+   if(x<0) x=0;     
+   x=x/(note_hi-note_low);       //get 0--->1
+   if(x>1.0) x=1.0; 
+   x=1.0f-x;        //get 1-->0
+   x=x*(val_low-val_high);        //get 0.75-->0
+   x+=val_high;         //get 1-->0.25
+   return x;
+}
+
 int generate_samples(jack_nframes_t nframes, void *arg)
 {
 //printf("asked to generate %d samples\n",nframes);
@@ -374,12 +386,28 @@ int generate_samples(jack_nframes_t nframes, void *arg)
 
          if (command == 0x90 && midi_event[2]!=0) //midi note on received
          { 
-            int note = midi_event[1]-12;
+            int note = midi_event[1];
+            if(is_guitar) note-=12;
+
             int vol = midi_event[2]; 
             //vol=0;  
             float vol_f=vol/127.0;
-            float vol_sq=vol_f*vol_f;
+ 
 
+           if(is_guitar)
+           {
+              float factor;
+              if(note<36)
+                  factor=compute_volume_factor(note,28,36,1.0,0.5);
+              else
+                 factor=compute_volume_factor(note,36,76,0.5,0.25);
+              //printf("  factor: %f\n",factor);
+              vol_f=0.75*factor;
+           }
+
+
+           float vol_sq=vol_f*vol_f;
+ 
             if(is_guitar)
             {
 //               for(int e=0;e<127;e++)
@@ -389,7 +417,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             }
 
        //#ifdef DEBUG
-       //     printf("keyboard.cpp -- got note on: %d %.02f %.02f time: %d\n",note,vol_f,vol_sq,sample_count);
+            //printf("keyboard.cpp -- got note on: %d %.02f %.02f time: %d\n",note,vol_f,vol_sq,sample_count);
        //#endif
             
  
@@ -438,7 +466,9 @@ int generate_samples(jack_nframes_t nframes, void *arg)
          if (command == 0x80 || (command==0x90 && midi_event[2]==0)) //midi note off received
          {
           
-            int note = midi_event[1]-12;
+            int note = midi_event[1];
+            if(is_guitar) note-=12;
+
             int note_index=note;
              
   //          printf("keyboard.cpp -- got note off: %d at %d\n",note,sample_count);

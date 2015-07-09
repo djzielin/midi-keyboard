@@ -103,7 +103,7 @@ static int resample = 0;				/* enable alsa-lib resampling */ //0 disables resamp
 static int period_event = 0;				/* produce poll event after each period */
 
 static snd_pcm_uframes_t buffer_size;
-static snd_pcm_uframes_t period_size=128; //was doing 128
+static snd_pcm_uframes_t period_size=32; //was doing 128
 static snd_output_t *output = NULL;
 
 snd_pcm_t *alsa_audio_handle;
