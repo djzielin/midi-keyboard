@@ -93,7 +93,7 @@ float bend_amount=1.0;
 float inc_amount=1.0;
 
 int (*obtain_midi_events)(int);
-int (*setup_midi)(std::string, std::string);
+int (*setup_midi)(std::string);
 
 void (*setup_audio)(int port);
 void (*audio_shutdown)();
@@ -449,6 +449,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
                   ((key_sample *)sk)->set_current_layer(4-layer);
                }
                //vol_f=1.0;
+               printf("key on with volume: %f\n",vol_f);
                sk->key_on(vol_f);                        
 
                //sk=skv[note+5]; //code for harmony
@@ -1020,22 +1021,23 @@ void init_organ()
 
 }
 
-void init_sounds(string kit_name)
+void init_sounds()
 {
-   init_rhodes2();
-   init_mellotron();
+   if(is_guitar==false)
+      init_rhodes2();
+   //init_mellotron();
    init_square_waves();
-   init_super_saw();
+   //init_super_saw();
    init_organ();
 
 
    int index=0;
 
-   if(kit_name=="rhodes")     index=0;
-   if(kit_name=="mellotron")  index=1;
-   if(kit_name=="square")     index=2;
-   if(kit_name=="supersaw")   index=3;
-   if(kit_name=="organ")      index=4;
+   //if(kit_name=="rhodes")     index=0;
+   //if(kit_name=="mellotron")  index=1;
+   //if(kit_name=="square")     index=2;
+   //if(kit_name=="supersaw")   index=3;
+   //if(kit_name=="organ")      index=4;
 
    current_instrument=index;
    all_instruments[current_instrument]->set_active();
@@ -1085,22 +1087,15 @@ static void signal_handler(int sig)
 
 int main(int argc, char **argv)
 {
+//   printf("Argc is: %d\n",argc);
+
 #ifdef RASPBERRY
    wiringPiSetupGpio();
    setup_gpio();
 #endif
-   //digitalWrite(LIGHT_PIN,LOW);
-//   printf("CPU is: %d\n",sched_getcpu());
+
    srand ( time(NULL) );
    update_moog_parameters(filter_freq,filter_res);
-
-
-   //recording_buffer=(float *)malloc(sizeof(float)*44100*60*5);
-   //if(recording_buffer==NULL) 
-  // {
-   //   printf("ERROR: couldn't alloc buffer for recording\n");
-   //   exit(1);
-  // }
 
 #ifdef USE_ALSA
    map_midi_functions_for_alsa();
@@ -1110,13 +1105,14 @@ int main(int argc, char **argv)
    map_audio_functions_for_jack();
 #endif
 
-   string kit_name="rhodes";
-   if(argc>1) 
-      kit_name=argv[1];
-   //if(argc>2)
-   //   which_keystation=atoi(argv[2]);
 
-   init_sounds(kit_name);
+   if(argc>1 && strcmp("Guitar",argv[1])==0)
+   {
+      printf("We are using guitar!\n");
+      is_guitar=true; //now we can setup the sounds available based on whats plugged in!
+   }
+
+   init_sounds();
 
         
    signal(SIGQUIT, signal_handler);
@@ -1124,24 +1120,19 @@ int main(int argc, char **argv)
    signal(SIGHUP, signal_handler);
    signal(SIGINT, signal_handler);
 
-   printf("argc: %d\n",argc);
-
-   if(argc>3)  setup_audio(atoi(argv[3]));   
-   else        setup_audio(0);   
+   setup_audio(0);   
 
    int instrument=0;
-   if(argc>2)
-      instrument=setup_midi(argv[2],argv[2]);
-   else      
-      instrument=setup_midi("Keystation","You Rock Guitar"); //TODO: maybe take this as command line parameter?
+   if(argc>1)
+      instrument=setup_midi(argv[1]);
 
    if(instrument==1)
    {
       is_guitar=true;
       printf("we are using guitar!\n");
 
-   current_instrument=4;
-   all_instruments[current_instrument]->set_active();
+      current_instrument=4;
+      all_instruments[current_instrument]->set_active();
 
    }
   // while(1) //if we want to do any keyboard interaction, do it here

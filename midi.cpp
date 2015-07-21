@@ -99,7 +99,7 @@ int obtain_midi_events_jack(int nframes)
    return total_midi_events;
 }
 
-int setup_midi_jack(string midi_device_name, string second_choice) //TODO - what about when we need to get data from multiple devices at the same time?
+int setup_midi_jack(string midi_device_name) //TODO - what about when we need to get data from multiple devices at the same time?
 {
    int ret_val=0;
    printf("trying to setup jack midi\n");
@@ -121,9 +121,8 @@ int setup_midi_jack(string midi_device_name, string second_choice) //TODO - what
       
       string s1=ports[i];
       bool is_first=(s1.find(midi_device_name)!=string::npos);
-      bool is_second=(s1.find(second_choice)!=string::npos);
  
-      if (is_first || is_second)
+      if (is_first)
       {    
           
 
@@ -133,8 +132,6 @@ int setup_midi_jack(string midi_device_name, string second_choice) //TODO - what
           midi_setup=true;
           if(is_first)
                ret_val=0;
-          if(is_second)
-               ret_val=1;
 
           break;
           
@@ -451,7 +448,7 @@ void get_alsa_system_info()
 
 int instrument;
 
-int find_specific_alsa_client(string client_name, string client_name2)
+int find_specific_alsa_client(string client_name)
 {
    printf("trying to find a ALSA MIDI client: %s\n",client_name.c_str());
 
@@ -478,12 +475,6 @@ int find_specific_alsa_client(string client_name, string client_name2)
       {
          printf("    MATCH!\n");
          instrument=0;
-         return idx;
-      }
-      if((name.find(client_name2)!=string::npos))
-      {
-         printf("    MATCH!\n");
-         instrument=1;
          return idx;
       }
 
@@ -560,7 +551,7 @@ void connect_alsa_ports()
 	}
 }
 
-int setup_midi_alsa(string midi_device_name, string second_choice)
+int setup_midi_alsa(string midi_device_name)
 {
    int err;
 
@@ -572,7 +563,7 @@ int setup_midi_alsa(string midi_device_name, string second_choice)
 
    set_alsa_name();
    get_alsa_system_info();
-   alsa_client=find_specific_alsa_client(midi_device_name,second_choice);
+   alsa_client=find_specific_alsa_client(midi_device_name);
 
    connect_alsa_ports();
 

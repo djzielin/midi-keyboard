@@ -1,3 +1,3 @@
 killall keyboard
 cd /home/pi/midi-keyboard
-sudo chrt 90 ./keyboard Keystation
+sudo chrt 90 ./keyboard Guitar

@@ -14,11 +14,13 @@ endif
 CXXFLAGS += -DUSE_ALSA
 
 # comb_filter.o tremolo.o 
-COMMON_OBJECTS=mono_sample.o key_sample.o simple_envelope.o wave_position.o wave_generator.o key_additive.o midi.o audio.o
+COMMON_OBJECTS=mono_sample.o key_sample.o simple_envelope.o wave_position.o wave_generator.o key_additive.o midi.o audio.o 
 
-all: $(COMMON_OBJECTS) keyboard.o
-	g++ keyboard.o $(COMMON_OBJECTS) $(LDFLAGS) -o keyboard
+all: $(COMMON_OBJECTS) keyboard.o get_instrument_connected.o
+	g++ keyboard.o $(COMMON_OBJECTS)  $(LDFLAGS) -o keyboard
+	g++ get_instrument_connected.o  $(LDFLAGS) -o get_instrument_connected
 
 clean:
 	rm -f *.o
 	rm -f keyboard
+	rm -f get_instrument_connected

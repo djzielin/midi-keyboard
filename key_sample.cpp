@@ -71,6 +71,7 @@ key_sample::~key_sample() //TODO - actually impliment
 
 void key_sample::key_on(float volume)
 { 
+   //printf("passed in volume: %f\n",volume);
   
    if(is_playing==true)
    {
@@ -86,6 +87,7 @@ void key_sample::key_on(float volume)
 
    old_position=position;
    old_volume_modifier=total_volume_modifier;
+
 
    vol=volume;
    position.reset();
@@ -143,9 +145,9 @@ float key_sample::get_sample()
    if(is_attacking)
    {  
       //printf("attacking\n");
-      attack_volume_modifier=1.0f-attack_env->get_value()*vol;
+      attack_volume_modifier=(1.0f-attack_env->get_value())*vol;
       total_volume_modifier=attack_volume_modifier; 
-      //printf("total volume modified: %f\n",total_volume_modifier);
+      //printf("  total volume modified: %f\n",total_volume_modifier);
 
       if(attack_env->get_state()==1)
       {
