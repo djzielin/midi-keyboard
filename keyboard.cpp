@@ -590,8 +590,8 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             {
                printf("switching patches now\n");
                current_instrument+=pitch_wheel;
-               if(current_instrument<0) current_instrument=4;
-               if(current_instrument>4) current_instrument=0;
+               if(current_instrument<0) current_instrument=all_instruments.size()-1;
+               if(current_instrument>=all_instruments.size()) current_instrument=0;
    
                all_instruments[current_instrument]->set_active();
 
