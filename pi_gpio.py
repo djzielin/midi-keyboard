@@ -14,6 +14,8 @@ switchpin=17
 lightpin1=5
 lightpin2=26
 
+drumset=0;
+
 while True:
 	try:
 		GPIO.setmode(GPIO.BCM)
@@ -46,8 +48,16 @@ while True:
   	 			Popen(['nohup', '/home/pi/midi-keyboard/launch_keyboard.sh'])
                         if(instrument==3):
 				print("Launching drums!\n");
-  	 			Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh'])
-
+                		if(drumset==0):
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_distorted_808b.cfg'])
+                		if(drumset==1):
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_linn.cfg'])
+                		if(drumset==2):
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_linn2.cfg'])
+				drumset+=1;
+                                if(drumset>2):
+					drumset=0;
+				print("next drumset will be: %d" % drumset);
 		#print("sleeping for 3 seconds");
                 time.sleep(3);
         

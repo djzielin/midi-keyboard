@@ -1,3 +1,3 @@
-killall keyboard
-cd /home/pi/midi-keyboard
-sudo chrt 90 ./keyboard rhodes
+sudo killall drums
+cd /home/pi/midi-drums
+sudo chrt 90 ./drums -f ./configs/$1
