@@ -41,8 +41,8 @@ while True:
 			#subprocess.call(['killall keyboard'], shell=True)
        	    		#time.sleep(1);
 		
-			#GPIO.setup(lightpin1, GPIO.OUT)
-        		#GPIO.output(lightpin1,GPIO.HIGH);
+			GPIO.setup(lightpin1, GPIO.OUT)
+        		GPIO.output(lightpin1,GPIO.LOW);
 
                         #GPIO.setup(26,GPIO.OUT)
                         #GPIO.output(26,GPIO.HIGH)
