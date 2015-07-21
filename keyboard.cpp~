@@ -1087,6 +1087,8 @@ static void signal_handler(int sig)
 
 int main(int argc, char **argv)
 {
+//   printf("Argc is: %d\n",argc);
+
 #ifdef RASPBERRY
    wiringPiSetupGpio();
    setup_gpio();
@@ -1133,7 +1135,27 @@ int main(int argc, char **argv)
       all_instruments[current_instrument]->set_active();
 
    }
+  // while(1) //if we want to do any keyboard interaction, do it here
+  // {
+      audio_loop();
+      //string input;
+      //cout << "Please enter a command: ";
+      //getline(cin, input);
 
-   audio_loop();
+      /*if(input.size()!=0)
+      {
+         if(isdigit(input[0]))
+         {
+            if(is_sample)
+            {
+               int patch=atoi(input.c_str());
+               for(int q=0;q<128;q++) ((key_sample*)skv[q])->set_current_layer(patch); 
+            }
+         }
+
+      }*/
+
+//      sleep(10);  
+   //}
 }
 
