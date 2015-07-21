@@ -1,6 +1,11 @@
+SYS := $(shell gcc -dumpmachine)
+
+ifneq (, $(findstring arm, $(SYS)))
+ RASPBERRY=yes
+endif
+
 LDFLAGS+=  -ljack -lsndfile -lsamplerate -lasound -lpthread 
 CXXFLAGS+= -O3  -I/usr/include/alsa 
-RASPBERRY=yes
 
 ifdef RASPBERRY
   LDFLAGS  +=-lwiringPi
