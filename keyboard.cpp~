@@ -97,7 +97,7 @@ int (*setup_midi)(std::string);
 
 void (*setup_audio)(int port);
 void (*audio_shutdown)();
-void (*send_audio_to_card)(float *,int,bool);
+void (*send_audio_to_card)(float *,int);
 void (*audio_loop)();
 
 float atan_scaler=1/M_PI_2;
@@ -669,7 +669,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
    gettimeofday(&taaa,NULL);
 
        
-   send_audio_to_card(generated_samples,nframes,false);
+   send_audio_to_card(generated_samples,nframes);
 
    int real_index=0;
    //printf("samples active: %d\n",highest_sample);

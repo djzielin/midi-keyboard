@@ -118,7 +118,7 @@ int xrun_recovery(snd_pcm_t *handle, int err);
 
 bool skip_poll=false;
 
-void send_audio_to_card_alsa(float *data, int nframes, bool is_stereo)
+void send_audio_to_card_alsa(float *data, int nframes)
 {
    int format_bits = snd_pcm_format_width(format);
    unsigned int maxval = (1 << (format_bits - 1)) - 1; //TODO maybe calc this once?
@@ -128,24 +128,13 @@ void send_audio_to_card_alsa(float *data, int nframes, bool is_stereo)
    //int *samples=alsa_samples;     //for 32 bit frames
    short int *samples=(short int *)alsa_samples; //for 16 bit frames
 
-   if(is_stereo==false)
+   for(int i=0;i<nframes;i++)
    {
-      for(int i=0;i<nframes;i++)
-      {
-         converted=data[i]*maxval;
-         samples[index]=converted;
-         index++;
-         samples[index]=converted;
-         index++;
-      }
-   }
-   else
-   {
-      for(int i=0;i<nframes*2;i++)
-      {
-         converted=data[i]*maxval;
-         samples[i]=converted;
-      }
+      converted=data[i]*maxval;
+      samples[index]=converted;
+      index++;
+      samples[index]=converted;
+      index++;
    }
 
    int frames_to_write=nframes;
