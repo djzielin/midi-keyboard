@@ -27,7 +27,8 @@
 *.out
 *.app
 keyboard
+get_instrument_connected
 
 # Editor Files
 *.~
-
+*.save
