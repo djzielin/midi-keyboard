@@ -100,7 +100,7 @@ void (*audio_shutdown)();
 void (*send_audio_to_card)(float *,int,bool);
 void (*audio_loop)();
 
-float atan_scaler=1/M_PI_2;
+const float atan_scaler=2.0f/M_PI;
 
 unsigned long sample_count=0;
 
@@ -320,6 +320,8 @@ float compute_volume_factor(int note, int note_low, int note_hi, float val_low, 
    return x;
 }
 
+int old_rasp_value=-1;
+
 int generate_samples(jack_nframes_t nframes, void *arg)
 {
 //printf("asked to generate %d samples\n",nframes);
@@ -449,7 +451,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
                   ((key_sample *)sk)->set_current_layer(4-layer);
                }
                //vol_f=1.0;
-               printf("key on with volume: %f\n",vol_f);
+               //printf("key on with volume: %f\n",vol_f);
                sk->key_on(vol_f);                        
 
                //sk=skv[note+5]; //code for harmony
@@ -698,10 +700,18 @@ int generate_samples(jack_nframes_t nframes, void *arg)
   
 #ifdef RASPBERRY
   //Below is for LED stuff
-   if(highest_sample>0)
-      digitalWrite(LIGHT_PIN,HIGH);
-   else
-      digitalWrite(LIGHT_PIN,LOW);
+
+   int new_rasp_value=highest_sample>0;
+
+   if(new_rasp_value!=old_rasp_value)
+   {
+      if(new_rasp_value)
+         digitalWrite(LIGHT_PIN,HIGH);
+      else
+         digitalWrite(LIGHT_PIN,LOW);
+   }
+
+   old_rasp_value=new_rasp_value;
 #endif
    //printf("samples: %d\n",highest_sample);
 
@@ -947,6 +957,7 @@ void init_square_waves()
       //printf("midi note: %d pitch: %f\n",e,pitch);
 
       sk->configure_single_wave(0,1,pitch,1.0);
+//      sk->configure_single_wave(1,0,MIDI_TO_HZ(e-12),1.0);
 
       square_waves->keys[e]=sk;
    }

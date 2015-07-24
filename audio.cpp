@@ -143,8 +143,7 @@ void send_audio_to_card_alsa(float *data, int nframes, bool is_stereo)
    {
       for(int i=0;i<nframes*2;i++)
       {
-         converted=data[i]*maxval;
-         samples[i]=converted;
+         samples[i]=data[i]*maxval;
       }
    }
 
