@@ -507,9 +507,10 @@ static void async_callback(snd_async_handler_t *ahandler)
 
 void audio_shutdown_alsa()
 {
+   snd_pcm_close(alsa_audio_handle);
+
    free(alsa_areas);
-	free(alsa_samples);
-	snd_pcm_close(alsa_audio_handle);
+   free(alsa_samples);
 }
 
 void setup_audio_alsa(int port)

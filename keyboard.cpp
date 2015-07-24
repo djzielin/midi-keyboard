@@ -305,7 +305,7 @@ int prev_sw=0;
 
 int prev_pitch_wheel=0;
 
-bool first_generate_samples=true;
+bool skip_first_frames=true;
 int old_guitar_val=0;
 
 float compute_volume_factor(int note, int note_low, int note_hi, float val_low, float val_high)
@@ -319,6 +319,8 @@ float compute_volume_factor(int note, int note_low, int note_hi, float val_low, 
    x+=val_high;         //get 1-->0.25
    return x;
 }
+
+unsigned int total_frames=0;
 
 int old_rasp_value=-1;
 
@@ -379,7 +381,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
      } 
      prev_sw=sw_value;
 */
-    if(first_generate_samples==false) //skip midi events in the first frame
+    if(skip_first_frames==false) //skip midi events in the first frame
       while(is_there_another_midi_event_for_frame(i))
       {
          unsigned int *midi_event=get_next_midi_event();
@@ -758,7 +760,13 @@ int generate_samples(jack_nframes_t nframes, void *arg)
   }
 #endif
 
-   first_generate_samples=false;
+   total_frames++;
+   if(skip_first_frames==true)
+   {
+       if(total_frames>100)
+          skip_first_frames=false;
+
+   }  
     return 0;      
 }
 
@@ -1092,6 +1100,7 @@ static void signal_handler(int sig)
 {
    
    fprintf(stderr, "signal received, exiting ...\n");
+   audio_shutdown();
    //dump_recording();
    exit(0);
 }
