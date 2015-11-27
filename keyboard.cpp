@@ -21,6 +21,7 @@
 //#include "tremolo.h"
 #include "key_sample.h"
 #include "key_additive.h"
+#include "key_multiplex.h"
 #include "music_math.h"
 #include "midi.h"
 #include "audio.h"
@@ -323,6 +324,7 @@ float compute_volume_factor(int note, int note_low, int note_hi, float val_low, 
 unsigned int total_frames=0;
 
 int old_rasp_value=-1;
+float filter_val=1;
 
 int generate_samples(jack_nframes_t nframes, void *arg)
 {
@@ -421,7 +423,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             }
 
        //#ifdef DEBUG
-            //printf("keyboard.cpp -- got note on: %d %.02f %.02f time: %d\n",note,vol_f,vol_sq,sample_count);
+            printf("keyboard.cpp -- got note on: %d %.02f %.02f time: %lu\n",note,vol_f,vol_sq,sample_count);
        //#endif
             
  
@@ -497,7 +499,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
             float val_rsq=1.0-((1.0-val_f)*(1.0-val_f));
            
           //#ifdef DEBUG
-//              printf("cc: %d val: %d\n",cc,val);
+             printf("cc: %d val: %d\n",cc,val);
           //#endif
             if(cc==1 && is_guitar) 
             {  //printf("is guitar controller\n");
@@ -515,7 +517,11 @@ int generate_samples(jack_nframes_t nframes, void *arg)
                   old_guitar_val=0;
 
             }
-            if(cc==7) { keyboard_slider_volume=val_f; }
+            if(cc==7 && is_guitar==false) { keyboard_slider_volume=val_f; }
+            if(cc==7 && is_guitar){
+               filter_val=val_f;
+               printf("setting filter value to: %f\n",filter_val);
+            }
            // if(cc==22) { op.setPole(val_rsq); }
             //if(cc==13) { lp_vol=val_f; }
             if(cc==64)
@@ -625,6 +631,8 @@ int generate_samples(jack_nframes_t nframes, void *arg)
       for (int q=0;q<highest_sample;q++)
       {     
          key_prototype *sk=active_samples[q];
+         if(sk->key_type=="key_additive")
+            ((key_additive *)sk)->set_filter_val(filter_val);
          sum+=sk->tick(bend_amount);   
       }
             
@@ -660,7 +668,7 @@ int generate_samples(jack_nframes_t nframes, void *arg)
       //   pt_increment_factor=1.0;
          
  
-      generated_samples[i]=atan(sum*keyboard_slider_volume)*atan_scaler*master_vol; //TODO, batch atan_scaler up with master_vol changes
+      generated_samples[i]=atan(sum*keyboard_slider_volume*1.0)*atan_scaler*master_vol; //TODO, batch atan_scaler up with master_vol changes
       //if(generated_samples[i]>master_vol)
       //  printf("ERROR: final: %f pre-tan: %f mastervol: %f\n",generated_samples[i],sum,master_vol);
       //if(do_record) recording_buffer[total_frames]=out[i]; //todo: stop recording if exceed buffer, otherwise we get segfault
@@ -981,6 +989,35 @@ void init_square_waves()
 }
 
 
+void init_multiplex_2()
+{
+   key_set *multiplex_waves=new key_set();
+
+   key_multiplex *sk;
+
+   for(int e=0;e<128;e++)
+   {
+      sk=new key_multiplex(e,audio_sample_rate,1);
+      float pitch=MIDI_TO_HZ(e);
+      //printf("midi note: %d pitch: %f\n",e,pitch);
+
+      sk->configure_single_wave(0,1,pitch,1.0,2);
+//      sk->configure_single_wave(1,0,MIDI_TO_HZ(e-12),1.0);
+
+      multiplex_waves->keys[e]=sk;
+   }
+   all_instruments.push_back(multiplex_waves);
+   current_instrument=all_instruments.size()-1;
+   skv=multiplex_waves->keys;
+
+   multiplex_waves->low_pass=0.8;
+   multiplex_waves->volume=0.3; 
+
+   all_instruments[current_instrument]->set_active();
+}
+
+
+
 void init_super_saw()
 {
    key_set *super_saw=new key_set();
@@ -1015,6 +1052,215 @@ void init_super_saw()
    all_instruments[current_instrument]->set_active();
 }
 
+#define MAX_WAVEFORMS 2000
+
+void init_band_limited_square()
+{
+   key_set *band_square=new key_set();
+
+   key_additive *sk;
+
+   float pitches[MAX_WAVEFORMS];
+   float amps[MAX_WAVEFORMS];
+
+   for(int e=0;e<128;e++)
+   {
+      //https://en.wikipedia.org/wiki/Square_wave
+      //frequency 2k-1*freq
+      //amplitude 1/(2k-1)
+
+      
+
+      int number_of_sines=0;
+      float base_pitch=MIDI_TO_HZ(e);
+
+      for(int i=0;i<MAX_WAVEFORMS;i++)
+      {
+         pitches[i]=base_pitch*(float)(2*i+1); //1 3 5...
+         amps[i]=1.0f/((float)i*2.0f+1.0f);
+
+         if(pitches[i]<(float)audio_sample_rate/2.0)
+            number_of_sines++;
+      }
+
+      sk=new key_additive(e,audio_sample_rate,number_of_sines);
+
+      printf("key: %d waves: %d\n",e,number_of_sines);
+      for(int i=0;i<number_of_sines;i++)
+      {
+         //printf("freq: %f amp: %f\n",pitches[i],amps[i]);
+         sk->configure_single_wave(i,0,pitches[i],amps[i]);
+      }
+
+      band_square->keys[e]=sk;
+   }
+   all_instruments.push_back(band_square);
+   current_instrument=all_instruments.size()-1;
+   
+   band_square->low_pass=0.8;
+   band_square->volume=0.7;
+
+   all_instruments[current_instrument]->set_active();
+}
+
+void init_band_limited_saw()
+{
+   key_set *band_square=new key_set();
+
+   key_additive *sk;
+
+   float pitches[MAX_WAVEFORMS];
+   float amps[MAX_WAVEFORMS];
+
+   for(int e=0;e<128;e++)
+   {
+      //https://en.wikipedia.org/wiki/Sawtooth_wave
+      //frequency k*freq
+      //amplitude 1/k
+
+      
+
+      int number_of_sines=0;
+      float base_pitch=MIDI_TO_HZ(e);
+
+      for(int i=0;i<MAX_WAVEFORMS;i++)
+      {
+         pitches[i]=base_pitch*(float)(i+1); //1 2 3 4 5...
+         amps[i]=1.0f/((float)(i+1));
+         //amps[i]=((float)MAX_WAVEFORMS-(float)i)/((float)MAX_WAVEFORMS);
+
+         if(pitches[i]<(float)audio_sample_rate/2.0)
+            number_of_sines++;
+      }
+
+      sk=new key_additive(e,audio_sample_rate,number_of_sines);
+
+      printf("key: %d waves: %d\n",e,number_of_sines);
+      for(int i=0;i<number_of_sines;i++)
+      {
+         //printf("freq: %f amp: %f\n",pitches[i],amps[i]);
+         sk->configure_single_wave(i,0,pitches[i],amps[i]);
+      }
+
+      band_square->keys[e]=sk;
+   }
+   all_instruments.push_back(band_square);
+   current_instrument=all_instruments.size()-1;
+   
+   band_square->low_pass=0.8;
+   band_square->volume=0.7;
+
+   all_instruments[current_instrument]->set_active();
+}
+
+void init_band_limited_pow2()
+{
+   key_set *band_square=new key_set();
+
+   key_additive *sk;
+
+   float pitches[MAX_WAVEFORMS];
+   float amps[MAX_WAVEFORMS];
+
+   for(int e=0;e<128;e++)
+   {
+      //https://en.wikipedia.org/wiki/Sawtooth_wave
+      //frequency k*freq
+      //amplitude 1/k
+
+      
+
+      int number_of_sines=0;
+      float base_pitch=MIDI_TO_HZ(e);
+
+      for(int i=0;i<MAX_WAVEFORMS;i++)
+      {
+         float harmonic=pow(2,i);
+         pitches[i]=base_pitch*harmonic; //1 2 4...
+         amps[i]=1.0f/harmonic;
+
+         //amps[i]=((float)MAX_WAVEFORMS-(float)i)/((float)MAX_WAVEFORMS);
+
+         if(pitches[i]<(float)audio_sample_rate/2.0)
+            number_of_sines++;
+      }
+
+      sk=new key_additive(e,audio_sample_rate,number_of_sines);
+
+      printf("key: %d waves: %d\n",e,number_of_sines);
+      for(int i=0;i<number_of_sines;i++)
+      {
+         //printf("freq: %f amp: %f\n",pitches[i],amps[i]);
+         sk->configure_single_wave(i,0,pitches[i],amps[i]);
+      }
+
+      band_square->keys[e]=sk;
+   }
+   all_instruments.push_back(band_square);
+   current_instrument=all_instruments.size()-1;
+   
+   band_square->low_pass=0.8;
+   band_square->volume=0.7;
+
+   all_instruments[current_instrument]->set_active();
+}
+
+void init_band_limited_even()
+{
+   key_set *band_square=new key_set();
+
+   key_additive *sk;
+
+   float pitches[MAX_WAVEFORMS];
+   float amps[MAX_WAVEFORMS];
+
+   for(int e=0;e<128;e++)
+   {
+      //https://en.wikipedia.org/wiki/Sawtooth_wave
+      //frequency k*freq
+      //amplitude 1/k
+
+      
+
+      int number_of_sines=0;
+      float base_pitch=MIDI_TO_HZ(e);
+
+      for(int i=0;i<MAX_WAVEFORMS;i++)
+      {
+         float harmonic=i*2; //1 2 4 6 8 10 12 14
+         if(i==0) harmonic=1.0f;
+
+         pitches[i]=base_pitch*harmonic; //1 2 4...
+         amps[i]=1.0f/harmonic;
+
+         //amps[i]=((float)MAX_WAVEFORMS-(float)i)/((float)MAX_WAVEFORMS);
+
+         if(pitches[i]<(float)audio_sample_rate/2.0)
+            number_of_sines++;
+      }
+
+      sk=new key_additive(e,audio_sample_rate,number_of_sines);
+
+      printf("key: %d waves: %d\n",e,number_of_sines);
+      for(int i=0;i<number_of_sines;i++)
+      {
+         //printf("freq: %f amp: %f\n",pitches[i],amps[i]);
+         sk->configure_single_wave(i,0,pitches[i],amps[i]);
+      }
+
+      band_square->keys[e]=sk;
+   }
+   all_instruments.push_back(band_square);
+   current_instrument=all_instruments.size()-1;
+   
+   band_square->low_pass=0.8;
+   band_square->volume=0.7;
+
+   all_instruments[current_instrument]->set_active();
+}
+
+
+
 void init_organ()
 {
    key_set *organ=new key_set();
@@ -1040,14 +1286,50 @@ void init_organ()
 
 }
 
+
+void init_detuned()
+{
+   key_set *organ=new key_set();
+
+   key_additive *sk;
+
+   for(int e=0;e<128;e++)
+   {
+      sk=new key_additive(e,audio_sample_rate,3);
+
+      sk->configure_single_wave(0,0,MIDI_TO_HZ(e-12),0.5);
+      sk->configure_single_wave(1,2,MIDI_TO_HZ(e),0.5);
+      sk->configure_single_wave(2,2,MIDI_TO_HZ(e+12)*CALC_CENTS(10),0.25);
+
+      organ->keys[e]=sk;
+   }
+   all_instruments.push_back(organ);
+   current_instrument=all_instruments.size()-1;
+
+   organ->low_pass=0.7;
+   organ->volume=0.6;
+
+   all_instruments[current_instrument]->set_active();
+
+}
+
 void init_sounds()
 {
-   if(is_guitar==false)
-      init_rhodes2();
+   //if(is_guitar==false)
+   //   init_rhodes2();
    //init_mellotron();
    init_square_waves();
    //init_super_saw();
-   init_organ();
+   //init_organ();
+   
+   //init_band_limited_square();
+   //init_band_limited_even();
+   //init_band_limited_saw();
+   //init_band_limited_pow2();
+
+   //init_multiplex_2();
+
+   //init_detuned();
 
 
    int index=0;

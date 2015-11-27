@@ -5,9 +5,9 @@
 
 #include "mono_sample.h"
 #include "key_prototype.h"
-#include "key_additive.h"
+#include "key_multiplex.h"
 
-key_additive::key_additive(int note, float sample_rate, int num_waves ) : key_prototype(note,sample_rate,"key_additive")
+key_multiplex::key_multiplex(int note, float sample_rate, int num_waves ) : key_prototype(note,sample_rate,"key_multiplex")
 {
    is_playing=false;
 
@@ -33,11 +33,11 @@ key_additive::key_additive(int note, float sample_rate, int num_waves ) : key_pr
  
    for(int i=0;i<num_waves;i++)
    {
-      wave_generator *w;
-      w=new wave_generator(sample_rate);
+      multiplex_generator *w;
+      w=new multiplex_generator(sample_rate);
       waves.push_back(w);
       
-      w=new wave_generator(sample_rate);
+      w=new multiplex_generator(sample_rate);
       old_waves.push_back(w);
   
       vols.push_back(1.0f);
@@ -46,11 +46,11 @@ key_additive::key_additive(int note, float sample_rate, int num_waves ) : key_pr
    filter_val=1;
 }
 
-void key_additive::configure_single_wave(int index, int waveform, float hz, float vol)
+void key_multiplex::configure_single_wave(int index, int waveform, float hz, float vol, int num_harmonics)
 {
-   wave_generator *wg=waves[index];
-   wg->set_waveform(waveform);
-   wg->set_pitch(hz);
+   multiplex_generator *wg=waves[index];
+   //wg->set_waveform(waveform);
+   wg->set_pitch(hz,  num_harmonics);
    wg->set_phase((float)rand()/(float)RAND_MAX); //randomize phase to prevent weird effects. 
    
    //(*old_waves[index])=(*waves[index]); //make copy for old_waves. TODO: technically we should copy the position over, since we aren't resetting the phase each time? 
@@ -58,12 +58,12 @@ void key_additive::configure_single_wave(int index, int waveform, float hz, floa
    vols[index]=vol;
 }
 
-key_additive::~key_additive() //TODO - actually impliment
+key_multiplex::~key_multiplex() //TODO - actually impliment
 {
 
 }
 
-void key_additive::key_on(float volume)
+void key_multiplex::key_on(float volume)
 { 
    if(is_playing==true)
    {
@@ -99,13 +99,13 @@ void key_additive::key_on(float volume)
    is_sustained_via_pedal=false;
 }
 
-void key_additive::key_off()
+void key_multiplex::key_off()
 {
    is_attacking=false;
    is_releasing=true;
 }
 
-float key_additive::tick(float time_scale)
+float key_multiplex::tick(float time_scale)
 {
    float sample=get_sample(time_scale);
 
@@ -123,11 +123,11 @@ float key_additive::tick(float time_scale)
    return sample;
 }
 
-int prev_harmonic=0;
-float prev_remainder=0;
-float prev_total_harmonic=0;
+//int prev_harmonic=0;
+//float prev_remainder=0;
+//float prev_total_harmonic=0;
 
-float key_additive::get_sample(float time_scale)
+float key_multiplex::get_sample(float time_scale)
 { 
    if(is_playing==false) return 0;
 
@@ -148,14 +148,12 @@ float key_additive::get_sample(float time_scale)
       filter_val=peak_filter_val;//*(decay_filter_env->get_value());
    }*/
 
-   //for filter effects 
-  /*float harmonic_content=filter_val*50.0f;
-   int number_of_waves=floor(harmonic_content);
-   float remainder=harmonic_content-(float)number_of_waves;
-*/
+ //  float harmonic_content=filter_val*50.0f;
+ //  int number_of_waves=floor(harmonic_content);
+ //  float remainder=harmonic_content-(float)number_of_waves;
+
  
 
-   //for(int i=0;i<number_of_waves && i<waves.size();i++)
    for(int i=0;i<waves.size();i++)
    {
       //float v;
@@ -172,13 +170,12 @@ float key_additive::get_sample(float time_scale)
    }
   
       //printf("remainder: %f\n",remainder);
-   //for filter effects 
-   //  int next_harmonic=number_of_waves;
-     // if(next_harmonic<waves.size())
-     //  sample+=waves[next_harmonic]->tick(time_scale)*vols[next_harmonic]*remainder;
+   /*   int next_harmonic=number_of_waves;
+      if(next_harmonic<waves.size())
+       sample+=waves[next_harmonic]->tick(time_scale)*vols[next_harmonic]*remainder;
    
    
-   /*if(prev_total_harmonic!=harmonic_content)
+   if(prev_total_harmonic!=harmonic_content)
    {
       for(int i=0;i<number_of_waves && i<waves.size();i++)
           printf("%.02f ",waves[i]->get_hz());
@@ -193,7 +190,6 @@ float key_additive::get_sample(float time_scale)
    }
    prev_total_harmonic=harmonic_content;
 */
-
    if(is_attacking)
    {  
       //printf("attacking\n");
@@ -250,12 +246,12 @@ float key_additive::get_sample(float time_scale)
    return sample; //*1/waves.size(); //TODO  precalc this
 }
 
-void key_additive::sustain_pedal_pressed()
+void key_multiplex::sustain_pedal_pressed()
 {
    is_sustained_via_pedal=true;
 }
 
-void key_additive::sustain_pedal_released() 
+void key_multiplex::sustain_pedal_released() 
 {
    if(is_sustained_via_pedal)
       key_off(); 

@@ -11,15 +11,15 @@ ifdef RASPBERRY
   LDFLAGS  +=-lwiringPi
   CXXFLAGS +=-DRASPBERRY -I/usr/local/include/stk
   LDFLAGS  += -lstk
+  CXXFLAGS += -DUSE_ALSA
 else
   LDFLAGS  +=-L$(wildcard ~/stk-4.4.3/src) -lstk
   CXXFLAGS += -I$(wildcard ~/stk-4.4.3/include)
 endif
 
-CXXFLAGS += -DUSE_ALSA
 
 # comb_filter.o tremolo.o 
-COMMON_OBJECTS=mono_sample.o key_sample.o simple_envelope.o wave_position.o wave_generator.o key_additive.o midi.o audio.o 
+COMMON_OBJECTS=mono_sample.o key_sample.o simple_envelope.o wave_position.o wave_generator.o key_additive.o midi.o audio.o multiplex_generator.o key_multiplex.o
 
 all: $(COMMON_OBJECTS) keyboard.o get_instrument_connected.o
 	g++ keyboard.o $(COMMON_OBJECTS)  $(LDFLAGS) -o keyboard
