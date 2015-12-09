@@ -341,7 +341,8 @@ int generate_samples(jack_nframes_t nframes, void *arg)
 #endif
 
    int num_midi_events=obtain_midi_events(nframes);
-
+   //if(num_midi_events!=0)
+   //  printf("number of midi events: %d\n",num_midi_events);
 
 
 #ifdef DO_PROFILE
@@ -1315,22 +1316,26 @@ void init_detuned()
 
 void init_sounds()
 {
-   //if(is_guitar==false)
-   //   init_rhodes2();
-   //init_mellotron();
-   init_square_waves();
-   //init_super_saw();
-   //init_organ();
+   if(is_guitar==false)
+   {
+      init_rhodes2();
+      init_square_waves();
+      init_organ();
+   }
+   else
+   {
+      init_multiplex_2();
+      init_square_waves();
+      init_organ();
+   }
    
+   //init_detuned();
+   //init_mellotron();
+   //init_super_saw();
    //init_band_limited_square();
    //init_band_limited_even();
    //init_band_limited_saw();
    //init_band_limited_pow2();
-
-   //init_multiplex_2();
-
-   //init_detuned();
-
 
    int index=0;
 
