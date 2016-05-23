@@ -19,6 +19,7 @@ public:
    float tick(float scale);
 
    int tick_count;
+   float get_hz() {return hz; }
 
 private:
    int waveform;

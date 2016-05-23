@@ -1,22 +1,22 @@
-#ifndef DJZ_KEY_ADDITIVE
-#define DJZ_KEY_ADDITIVE
+#ifndef DJZ_key_multiplex
+#define DJZ_key_multiplex
 
 #include "mono_sample.h"
 #include "simple_envelope.h"
 #include <string>
 #include "key_prototype.h"
-#include "wave_generator.h"
+#include "multiplex_generator.h"
 
 using namespace std;
 
-class key_additive : public key_prototype
+class key_multiplex : public key_prototype
 {
 public:
-   key_additive(int note, float sample_rate, int num_waves);
+   key_multiplex(int note, float sample_rate, int num_waves);
 
-   void configure_single_wave(int index, int waveform, float hz, float vol);
+   void configure_single_wave(int index, int waveform, float hz, float vol, int num_harmonics);
 
-   ~key_additive();
+   ~key_multiplex();
 
    void key_off();
    void key_on(float volume);
@@ -31,7 +31,7 @@ public:
    void sustain_pedal_released();
 
 
-   vector <wave_generator *> waves;
+   vector <multiplex_generator *> waves;
  
    void set_filter_val(float val) { filter_val=val; }
 
@@ -42,7 +42,7 @@ private:
 
    vector <float> vols;
 
-   vector <wave_generator *> old_waves;
+   vector <multiplex_generator *> old_waves;
    
    float master_vol;
    float total_volume_modifier;

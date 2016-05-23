@@ -32,6 +32,9 @@ void simple_envelope::increment()
    } 
 }
 
+
+
+
 void simple_envelope::set_envelope(float d)
 {
    _decay_time=d;

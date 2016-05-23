@@ -7,7 +7,7 @@
 #include "key_prototype.h"
 #include "key_sample.h"
 
-key_sample::key_sample(int note, float sample_rate) : key_prototype(note,sample_rate)
+key_sample::key_sample(int note, float sample_rate) : key_prototype(note,sample_rate,"key_sample")
 {
    speed=1.0;
 

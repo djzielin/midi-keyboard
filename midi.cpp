@@ -60,15 +60,23 @@ bool is_there_another_midi_event_for_frame(int frame)
 
 int obtain_midi_events_jack(int nframes)
 {
-   if(midi_setup==false) return 0;
+   //printf("obtain midi events!\n");
+
+   if(midi_setup==false)
+   {
+      printf("midi is not yet setup\n");
+      return 0;
+   }
 
    jack_midi_event_t in_event;
 
    void* port_buf = jack_port_get_buffer(input_port, nframes);
    total_midi_events = jack_midi_get_event_count(port_buf);
-  
+   //printf("total midi events: %d\n",total_midi_events);
+
    for(int i=0;i<total_midi_events;i++)
    {
+      //printf("we have %d midi events!\n",total_midi_events);
       jack_midi_event_get(&in_event, port_buf, i);
 
       int data_base=i*MIDI_DATA_SIZE;
@@ -128,13 +136,14 @@ int setup_midi_jack(string midi_device_name) //TODO - what about when we need to
 
         std::cout << "  found our desired device: " << midi_device_name << std::endl;
                
-          jack_connect (jack_client, ports[i], jack_port_name (input_port));
-          midi_setup=true;
-          if(is_first)
-               ret_val=0;
-
-          break;
-          
+        int jack_result=jack_connect (jack_client, ports[i], jack_port_name (input_port));
+        if(jack_result==0)
+        {
+           printf("successfully connected to %s\n",s1.c_str());
+           midi_setup=true;
+           ret_val=0;
+           break;
+        }         
       }
    }
    if(midi_setup==false)
