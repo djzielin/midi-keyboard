@@ -49,14 +49,16 @@ while True:
                         if(instrument==3):
 				print("Launching drums!\n");
                 		if(drumset==0):
-			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_distorted_808b.cfg'])
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','regular_kit.cfg'])
                 		if(drumset==1):
-			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_linn.cfg'])
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','gun_kit.cfg'])
                 		if(drumset==2):
-			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_linn2.cfg'])
-				drumset+=1;
-                                if(drumset>2):
-					drumset=0;
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','control_kit.cfg'])
+                		if(drumset==3):
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','tom_kit.cfg'])
+				#drumset+=1;
+                                #if(drumset>0):
+				drumset=0;
 				print("next drumset will be: %d" % drumset);
 		#print("sleeping for 3 seconds");
                 time.sleep(3);
