@@ -482,7 +482,7 @@ int find_specific_alsa_client(string client_name)
 
       if((name.find(client_name)!=string::npos))
       {
-         printf("    MATCH!\n");
+         printf("    MATCH! at %d\n",idx);
          instrument=0;
          return idx;
       }
@@ -490,8 +490,9 @@ int find_specific_alsa_client(string client_name)
 
 	}
 
-   printf("no match exiting\n");
-   exit(1);
+   //printf("no match exiting\n");
+   //exit(1);
+   return -1;
 }
 
 void connect_alsa_ports()
@@ -550,7 +551,7 @@ void connect_alsa_ports()
 
 	snd_seq_port_subscribe_set_time_real(sub, 1);
 	
-   v1=addr.client = alsa_client;
+        v1=addr.client = alsa_client;
 	v2=addr.port = 0;
 	snd_seq_port_subscribe_set_sender(sub, &addr);
 	
@@ -558,6 +559,24 @@ void connect_alsa_ports()
 			fprintf(stderr, "Cannot subscribe port %i from client %i: %s\n", v2, v1, snd_strerror(err));
 			return;
 	}
+
+       alsa_client=find_specific_alsa_client("nanoKONTROL");
+       if(alsa_client==-1)
+       {
+          printf("seems the nanoKONTROL is not hooked up yet...\n");
+          return;
+       }
+
+        v1=addr.client = alsa_client;
+	v2=addr.port = 0;
+	snd_seq_port_subscribe_set_sender(sub, &addr);
+	
+	if ((err = snd_seq_subscribe_port(alsa_handle, sub))<0) {
+			fprintf(stderr, "Cannot subscribe port %i from client %i: %s\n", v2, v1, snd_strerror(err));
+			return;
+	}
+        printf("nanoKONTROL should be hooked in now!\n");
+
 }
 
 int setup_midi_alsa(string midi_device_name)
@@ -573,6 +592,12 @@ int setup_midi_alsa(string midi_device_name)
    set_alsa_name();
    get_alsa_system_info();
    alsa_client=find_specific_alsa_client(midi_device_name);
+   if(alsa_client==-1)
+   {
+      printf("Couldn't locate midi device: %s\n",midi_device_name.c_str());
+      exit(0);
+
+   }
 
    connect_alsa_ports();
 

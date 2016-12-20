@@ -40,6 +40,8 @@ void comb_filter::set_delay_time(float dt)
    _original_freq=dt;
    _base_delay=dt*_sample_rate;
    if(_base_delay<1) _base_delay=1;
+//   if(_base_delay%2==1)
+//      _base_delay++;
 
    _stk_d->setDelay(_base_delay); 
 }
