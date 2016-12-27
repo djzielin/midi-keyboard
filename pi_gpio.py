@@ -52,12 +52,12 @@ while True:
 			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_linn.cfg'])
                 		if(drumset==1):
 			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_808.cfg'])
+                		#if(drumset==2):
+			 #		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_amen.cfg'])
                 		if(drumset==2):
-			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','new_amen.cfg'])
-                		if(drumset==3):
-			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_drums.sh','vibes.cfg'])
+			 		Popen(['nohup', '/home/pi/midi-keyboard/launch_vibes.sh'])
 				drumset+=1;
-                                if(drumset>3):
+                                if(drumset>2):
 					drumset=0;
 				print("next drumset will be: %d" % drumset);
 		#print("sleeping for 3 seconds");

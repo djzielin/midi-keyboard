@@ -126,12 +126,6 @@ mono_sample::mono_sample (const char * fname, int system_sample_rate)
    file = SndfileHandle (fname) ;
    _frames=file.frames();
 
-   if(_frames==0) 
-   {
-      printf("error: 0 frames in file: %s\n",fname);
-      exit(1);
-   }
-
    bool is_stereo=(file.channels()==2);
    int file_sample_rate=file.samplerate(); //TODO use libsample rate to convert if sample rates of system is different from file
    _sample_rate=system_sample_rate;
@@ -139,7 +133,14 @@ mono_sample::mono_sample (const char * fname, int system_sample_rate)
    printf ("Opened file '%s'\n", fname) ;
    printf ("    Sample rate : %d\n", file.samplerate ()) ;
    printf ("    Channels    : %d\n", file.channels ()) ;
-   printf ("    Frames    : %ld\n", file.frames ()) ;
+   printf ("    Frames    : %ld\n", _frames) ;
+
+   if(_frames==0) 
+   {
+      printf("error: 0 frames in file: %s\n",fname);
+      exit(1);
+   }
+
 
    if(file.channels()>2) 
    {
